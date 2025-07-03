@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Card Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 2px;
+        }
+
+        .panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            border-bottom: 3px solid #34495e;
+        }
+
+        .pdf-container {
+            flex: 1;
+            background: #f8f9fa;
+        }
+
+        .pdf-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .markdown-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fafbfc;
+        }
+
+        .markdown-content {
+            max-width: none;
+            line-height: 1.6;
+        }
+
+        .markdown-content h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .markdown-content h2 {
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+
+        .markdown-content h3 {
+            color: #5a6c7d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .markdown-content th {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .markdown-content tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .markdown-content li {
+            margin: 5px 0;
+        }
+
+        .markdown-content code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severe {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .applied {
+            background: #27ae60;
+            color: white;
+        }
+
+        .not-applied {
+            background: #95a5a6;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .panel {
+                margin: 5px;
+            }
+            
+            .panel-header {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .markdown-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- PDF Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                📄 Healthcare Card PDF
+            </div>
+            <div class="pdf-container">
+                <iframe 
+                    class="pdf-frame"
+                    src="healthcare-example.pdf"
+                    title="TCCC Card PDF">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Markdown Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                📝 TCCC Card Data
+            </div>
+            <div class="markdown-container">
+                <div class="markdown-content" id="markdown-content">
+                    <!-- Markdown content will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const markdownContent = `# Tactical Combat Casualty Care (TCCC) Card
+
+## Patient Information
+
+**Evacuation Category:** <span class="status-badge severe">II - Severe</span>  
+**Battle Roster #:** 87654  
+**Name:** Scanner, Hand  
+**Last 4:** 0007  
+**Date:** 01-JAN-24  
+**Time:** 03:00  
+**Unit:** #5678  
+**Allergies:** -NA-
+
+## Mechanism of Injury
+
+The following mechanisms were identified:
+- ☐ Artillery
+- ☐ Burn
+- ☐ Fall  
+- ☐ Grenade
+- ☐ GSW (Gunshot Wound)
+- ☐ IED
+- ☐ Landmine
+- ☐ MVC (Motor Vehicle Crash)
+- ☐ RPG
+- ☑ Other: **Sad**
+
+## Injuries Sustained
+
+### Tourniquet Applications
+
+| Location | Type | Time Applied |
+|----------|------|--------------|
+| Right Arm | Burn | 02:34:18 |
+| Left Arm | Burn | 02:34:18 |
+| Right Leg | Fall | 02:46 |
+| Left Leg | Fall | 02:46 |
+
+## Vital Signs Monitoring
+
+| Time | 03:14 | 03:29 |
+|------|-------|-------|
+| **Pulse (Rate & Location)** | 101, wrist | 97, wrist |
+| **Blood Pressure** | 120/70 | 144/55 |
+| **Respiratory Rate** | 23 | 19 |
+| **Pulse Ox % O2 Sat** | 90% | 97% |
+| **AVPU** | - | - |
+| **Pain Scale (0-10)** | 7 | 5 |
+
+## Treatments Applied
+
+### Circulation (C)
+- ☐ Extremity-TQ
+- ☐ Junctional-TQ
+- ☑ **Pressure-Dressing** <span class="status-badge applied">Applied</span>
+- ☑ **Hemostatic-Dressing** <span class="status-badge applied">Applied</span>
+
+### Airway (A)
+- ☑ **Intact** <span class="status-badge applied">Confirmed</span>
+- ☐ NPA
+- ☐ CRIC
+- ☐ ET-Tube
+- ☐ SGA
+
+### Breathing (B)
+- ☑ **O2** <span class="status-badge applied">Administered</span>
+- ☐ Needle-D
+- ☐ Chest-Tube
+- ☐ Chest-Seal
+
+## Fluid and Blood Products
+
+| Type | Name | Volume | Route | Time |
+|------|------|--------|-------|------|
+| **Fluid** | Matcha Tea | 50 mL | Alpha | 03:10 |
+| **Blood Product** | Double Red | 1 unit | Arm | 03:20 |
+
+## Medications Administered
+
+| Category | Name | Dose | Route | Time |
+|----------|------|------|-------|------|
+| **Analgesic** | Morphine | 10 mg | Arm | 03:04 |
+| **Antibiotic** | - | - | - | - |
+| **Other** | - | - | - | - |
+
+## Additional Equipment/Care
+
+**Other Equipment Used:**
+- Combat-Pill-Pack
+- Eye-Shield (R L)
+- Splint
+
+**Hypothermia Prevention:** Type not specified
+
+## Clinical Notes
+
+> **Patient recovering from essentially excessive Scanning of documents causing severe hand burns, after which they passed out and fell very hard.**
+
+## First Responder Information
+
+**Name:** Second, Param  
+**Last 4:** 0002
+
+---
+
+*DD FORM (NUM), (DATE) - Page 1 of 2*
+
+## Summary
+
+This TCCC card documents the care provided to a patient who sustained burns to both arms and fall injuries to both legs. The patient's vital signs showed improvement over the monitoring period, with oxygen saturation increasing from 90% to 97% and pain decreasing from 7/10 to 5/10. Multiple interventions were applied including pressure dressings, hemostatic dressings, oxygen therapy, fluid resuscitation, and pain management with morphine.`;
+
+        // Render the markdown
+        document.getElementById('markdown-content').innerHTML = marked.parse(markdownContent);
+    </script>
+</body>
+</html>
